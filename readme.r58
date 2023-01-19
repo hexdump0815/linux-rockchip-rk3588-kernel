@@ -40,10 +40,10 @@ cp -v tools/power/cpupower/libcpupower.so.0.0.1 /lib/modules/${kver}/tools/libcp
 # make headers_install INSTALL_HDR_PATH=/usr
 cp -v .config /boot/config-${kver}
 cp -v arch/arm64/boot/Image /boot/Image-${kver}
-mkdir /boot/dtb-${kver}/rockchip
+mkdir -p /boot/dtb-${kver}/rockchip
 cp -v arch/arm64/boot/dts/rockchip/rk3588-*.dtb /boot/dtb-${kver}/rockchip/
 mkdir /boot/dtb-${kver}/rockchip/overlay
-cp -v arch/arm64/boot/dts/rockchip/overlay/*.dtb /boot/dtb-${kver}/rockchip/overlay/
+cp -v arch/arm64/boot/dts/rockchip/overlay/*.dtbo /boot/dtb-${kver}/rockchip/overlay/
 cp -v System.map /boot/System.map-${kver}
 cd /boot
 update-initramfs -c -k ${kver}

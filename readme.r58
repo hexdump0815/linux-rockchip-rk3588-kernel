@@ -42,6 +42,7 @@ cp -v .config /boot/config-${kver}
 cp -v arch/arm64/boot/Image /boot/Image-${kver}
 mkdir -p /boot/dtb-${kver}/rockchip
 cp -v arch/arm64/boot/dts/rockchip/rk3588-*.dtb /boot/dtb-${kver}/rockchip/
+cp -v arch/arm64/boot/dts/rockchip/rk3588s-*.dtb /boot/dtb-${kver}/rockchip/
 mkdir /boot/dtb-${kver}/rockchip/overlay
 cp -v arch/arm64/boot/dts/rockchip/overlay/*.dtbo /boot/dtb-${kver}/rockchip/overlay/
 cp -v System.map /boot/System.map-${kver}

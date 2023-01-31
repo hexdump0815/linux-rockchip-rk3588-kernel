@@ -1,0 +1,61 @@
+# directories:
+# - /compile/doc/rk3588 - the files in this dir
+# - /compile/source/linux-radxa-op5 - the kernel sources checked out from gitrepo
+# - /compile/result/rk3588 - the resulting kernel, modules etc. tar.gz files
+# - /compile/doc/kernel-config-options - https://github.com/hexdump0815/kernel-config-options
+# name: rxa-op5 - rockchip rk3588 for orange pi 5
+
+# info: patches based on armbian build repo patches at commit dfd5d40c939ad669332e0110c629bb21c945d1b4
+#       radxa tree based on commit ba392dc725fab56eb5847ce04fded8e151c3f4bf
+#       required: apt-get -y install python2; ln -s /usr/bin/python2 /usr/bin/python
+
+cd /compile/source/linux-radxa-op5
+
+# patches:
+# add rk3588 patches from armbian
+for i in /compile/doc/rk3588/misc.op5/patches/armbian/*.patch; do
+  echo === $i
+  patch -p1 < $i
+done
+# add rk3588 patches for orange pi 5 on top from armbian
+for i in /compile/doc/rk3588/misc.op5/patches/armbian/opi5/*.patch; do
+  echo === $i
+  patch -p1 < $i
+done
+
+export ARCH=arm64
+scripts/kconfig/merge_config.sh -m /compile/doc/rk3588/misc/misc/linux-rockchip-rk3588-legacy.config /compile/doc/kernel-config-options/docker-options.cfg /compile/doc/kernel-config-options/options-to-remove-generic.cfg /compile/doc/rk3588/misc.op5/options/options-to-remove-special.cfg /compile/doc/kernel-config-options/additional-options-generic.cfg /compile/doc/kernel-config-options/additional-options-aarch64.cfg /compile/doc/rk3588/misc.op5/options/additional-options-special.cfg
+( cd /compile/doc/kernel-config-options ; git rev-parse --verify HEAD ) > /compile/doc/rk3588/misc.op5/options/kernel-config-options.version
+make olddefconfig
+make -j 4 Image dtbs modules
+cd tools/perf
+make
+cd ../power/cpupower
+make
+cd ../../..
+export kver=`make kernelrelease`
+echo ${kver}
+# remove debug info if there and wanted
+# find . -type f -name '*.ko' | sudo xargs -n 1 objcopy --strip-unneeded
+make modules_install
+mkdir -p /lib/modules/${kver}/tools
+cp -v tools/perf/perf /lib/modules/${kver}/tools
+cp -v tools/power/cpupower/cpupower /lib/modules/${kver}/tools
+cp -v tools/power/cpupower/libcpupower.so.0.0.1 /lib/modules/${kver}/tools/libcpupower.so.0
+# make headers_install INSTALL_HDR_PATH=/usr
+cp -v .config /boot/config-${kver}
+cp -v arch/arm64/boot/Image /boot/Image-${kver}
+mkdir -p /boot/dtb-${kver}/rockchip
+cp -v arch/arm64/boot/dts/rockchip/rk3588-*.dtb /boot/dtb-${kver}/rockchip/
+cp -v arch/arm64/boot/dts/rockchip/rk3588s-*.dtb /boot/dtb-${kver}/rockchip/
+mkdir /boot/dtb-${kver}/rockchip/overlay
+cp -v arch/arm64/boot/dts/rockchip/overlay/*.dtbo /boot/dtb-${kver}/rockchip/overlay/
+cp -v System.map /boot/System.map-${kver}
+cd /boot
+update-initramfs -c -k ${kver}
+mkimage -A arm64 -O linux -T ramdisk -a 0x0 -e 0x0 -n initrd.img-${kver} -d initrd.img-${kver} uInitrd-${kver}
+tar cvzf /compile/source/linux-radxa-op5/${kver}.tar.gz /boot/*-${kver} /lib/modules/${kver}
+cp -v /compile/doc/rk3588/config.op5 /compile/doc/rk3588/config.op5.old
+cp -v /compile/source/linux-radxa-op5/.config /compile/doc/rk3588/config.op5
+cp -v /compile/source/linux-radxa-op5/.config /compile/doc/rk3588/config.op5-${kver}
+cp -v /compile/source/linux-radxa-op5/*.tar.gz /compile/result/rk3588

@@ -1,26 +1,26 @@
 # directories:
 # - /compile/doc/rk3588 - the files in this dir
-# - /compile/source/linux-radxa-r58 - the kernel sources checked out from gitrepo
+# - /compile/source/linux-radxa-r5b - the kernel sources checked out from gitrepo
 # - /compile/result/rk3588 - the resulting kernel, modules etc. tar.gz files
 # - /compile/doc/kernel-config-options - https://github.com/hexdump0815/kernel-config-options
-# name: rxa-r58 - rockchip rk3588
+# name: rxa-r5b - rockchip rk3588 for radxa rock 5b
 
 # info: patches based on armbian build repo patches at commit dfd5d40c939ad669332e0110c629bb21c945d1b4
 #       radxa tree based on commit ba392dc725fab56eb5847ce04fded8e151c3f4bf
 #       required: apt-get -y install python2; ln -s /usr/bin/python2 /usr/bin/python
 
-cd /compile/source/linux-radxa-r58
+cd /compile/source/linux-radxa-r5b
 
 # patches:
 # add rk3588 patches from armbian
-for i in /compile/doc/rk3588/misc.r58/patches/armbian/*.patch; do
+for i in /compile/doc/rk3588/misc.r5b/patches/armbian/*.patch; do
   echo === $i
   patch -p1 < $i
 done
 
 export ARCH=arm64
-scripts/kconfig/merge_config.sh -m /compile/doc/rk3588/misc.r58/misc/linux-rockchip-rk3588-legacy.config /compile/doc/kernel-config-options/docker-options.cfg /compile/doc/kernel-config-options/options-to-remove-generic.cfg /compile/doc/rk3588/misc.r58/options/options-to-remove-special.cfg /compile/doc/kernel-config-options/additional-options-generic.cfg /compile/doc/kernel-config-options/additional-options-aarch64.cfg /compile/doc/rk3588/misc.r58/options/additional-options-special.cfg
-( cd /compile/doc/kernel-config-options ; git rev-parse --verify HEAD ) > /compile/doc/rk3588/misc.r58/options/kernel-config-options.version
+scripts/kconfig/merge_config.sh -m /compile/doc/rk3588/misc/misc/linux-rockchip-rk3588-legacy.config /compile/doc/kernel-config-options/docker-options.cfg /compile/doc/kernel-config-options/options-to-remove-generic.cfg /compile/doc/rk3588/misc.r5b/options/options-to-remove-special.cfg /compile/doc/kernel-config-options/additional-options-generic.cfg /compile/doc/kernel-config-options/additional-options-aarch64.cfg /compile/doc/rk3588/misc.r5b/options/additional-options-special.cfg
+( cd /compile/doc/kernel-config-options ; git rev-parse --verify HEAD ) > /compile/doc/rk3588/misc.r5b/options/kernel-config-options.version
 make olddefconfig
 make -j 4 Image dtbs modules
 cd tools/perf
@@ -49,8 +49,8 @@ cp -v System.map /boot/System.map-${kver}
 cd /boot
 update-initramfs -c -k ${kver}
 mkimage -A arm64 -O linux -T ramdisk -a 0x0 -e 0x0 -n initrd.img-${kver} -d initrd.img-${kver} uInitrd-${kver}
-tar cvzf /compile/source/linux-radxa-r58/${kver}.tar.gz /boot/*-${kver} /lib/modules/${kver}
-cp -v /compile/doc/rk3588/config.r58 /compile/doc/rk3588/config.r58.old
-cp -v /compile/source/linux-radxa-r58/.config /compile/doc/rk3588/config.r58
-cp -v /compile/source/linux-radxa-r58/.config /compile/doc/rk3588/config.r58-${kver}
-cp -v /compile/source/linux-radxa-r58/*.tar.gz /compile/result/rk3588
+tar cvzf /compile/source/linux-radxa-r5b/${kver}.tar.gz /boot/*-${kver} /lib/modules/${kver}
+cp -v /compile/doc/rk3588/config.r5b /compile/doc/rk3588/config.r5b.old
+cp -v /compile/source/linux-radxa-r5b/.config /compile/doc/rk3588/config.r5b
+cp -v /compile/source/linux-radxa-r5b/.config /compile/doc/rk3588/config.r5b-${kver}
+cp -v /compile/source/linux-radxa-r5b/*.tar.gz /compile/result/rk3588
